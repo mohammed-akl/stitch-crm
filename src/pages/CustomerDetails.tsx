@@ -6,7 +6,7 @@ import { cn, getStatusColor } from '../lib/utils';
 import { 
   ArrowLeft, Edit2, MapPin, Phone, FileText, ExternalLink, 
   Upload, X, Check, AlertCircle, Share2, Navigation, Eye, Download,
-  ChevronDown, CircleDashed, Activity, Truck, CheckCircle, XCircle
+  ChevronDown, CircleDashed, Activity, Truck, CheckCircle, XCircle, Copy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -42,6 +42,7 @@ export default function CustomerDetails() {
   const [newStatus, setNewStatus] = useState<LeadStatus | ''>('');
   const [failedReason, setFailedReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -188,10 +189,9 @@ export default function CustomerDetails() {
     }
   };
 
-  const handleShare = async () => {
-    if (!customer) return;
-    try {
-      const shareText = `Greencell solar energy solutions - kuttippuram
+  const getShareText = () => {
+    if (!customer) return '';
+    return `Greencell solar energy solutions - kuttippuram
 -----------------------------------
 Customer details
 
@@ -200,13 +200,28 @@ Phone (Primary): ${customer.phone_primary}${customer.phone_secondary ? `\nPhone 
 Consumer Number: ${customer.consumer_number || 'N/A'}
 Location: ${customer.location}${customer.google_maps_url ? `\nGoogle Maps: ${customer.google_maps_url}` : ''}
 Status: ${customer.status}${customer.description ? `\nDescription: ${customer.description}` : ''}`;
+  };
 
+  const handleShare = async () => {
+    if (!customer) return;
+    try {
       await navigator.share({
         title: `Lead: ${customer.name}`,
-        text: shareText
+        text: getShareText()
       });
     } catch (err) {
       console.log('Sharing failed', err);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!customer) return;
+    try {
+      await navigator.clipboard.writeText(getShareText());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.log('Copy failed', err);
     }
   };
 
@@ -378,6 +393,23 @@ Status: ${customer.status}${customer.description ? `\nDescription: ${customer.de
           >
             <Share2 size={20} className="text-blue-600" />
             Share Details
+          </button>
+          
+          <button 
+            onClick={handleCopy}
+            className="flex items-center justify-center gap-3 bg-white text-gray-800 border-2 border-gray-100 font-bold py-4 rounded-2xl hover:bg-gray-50 active:scale-[0.98] transition-all"
+          >
+            {copied ? (
+              <>
+                <Check size={20} className="text-green-600" />
+                <span className="text-green-600">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={20} className="text-gray-500" />
+                <span>Copy Details</span>
+              </>
+            )}
           </button>
         </div>
 
