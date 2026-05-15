@@ -41,8 +41,13 @@ export default function Dashboard() {
 
   const filteredLeads = leads.filter((lead) => {
     const matchesTab = activeTab === 'All' || lead.status === activeTab;
-    const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         lead.consumer_number?.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = 
+      lead.name.toLowerCase().includes(query) || 
+      lead.consumer_number?.toLowerCase().includes(query) ||
+      lead.phone_primary?.toLowerCase().includes(query) ||
+      lead.phone_secondary?.toLowerCase().includes(query);
+      
     return matchesTab && matchesSearch;
   });
 
