@@ -594,64 +594,64 @@ Status: ${customer.status}${customer.description ? `\nDescription: ${customer.de
               {/* Form implementation for editing - reusing logic from AddLead potentially or just simple inputs */}
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Name</label>
+                  <label className="text-sm font-semibold text-gray-700">Name</label>
                   <input 
                     defaultValue={customer.name} 
                     onChange={(e) => setCustomer({...customer, name: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Primary</label>
+                  <label className="text-sm font-semibold text-gray-700">Phone Primary</label>
                   <input 
                     defaultValue={customer.phone_primary} 
                     onChange={(e) => setCustomer({...customer, phone_primary: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Secondary</label>
+                  <label className="text-sm font-semibold text-gray-700">Phone Secondary</label>
                   <input 
                     defaultValue={customer.phone_secondary || ''} 
                     onChange={(e) => setCustomer({...customer, phone_secondary: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                     placeholder="Optional"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Consumer Number</label>
+                  <label className="text-sm font-semibold text-gray-700">Consumer Number</label>
                   <input 
                     defaultValue={customer.consumer_number || ''} 
                     onChange={(e) => setCustomer({...customer, consumer_number: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                     placeholder="ID or Account Number"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</label>
+                  <label className="text-sm font-semibold text-gray-700">Location</label>
                   <textarea 
                     defaultValue={customer.location} 
                     onBlur={(e) => setCustomer({...customer, location: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                     rows={2}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Google Maps URL</label>
+                  <label className="text-sm font-semibold text-gray-700">Google Maps URL</label>
                   <input 
                     type="url"
                     defaultValue={customer.google_maps_url || ''} 
                     onChange={(e) => setCustomer({...customer, google_maps_url: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                     placeholder="https://goo.gl/maps/..."
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Description</label>
+                  <label className="text-sm font-semibold text-gray-700">Description</label>
                   <textarea 
                     defaultValue={customer.description || ''} 
                     onBlur={(e) => setCustomer({...customer, description: e.target.value})}
-                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                     rows={4}
                   />
                 </div>
