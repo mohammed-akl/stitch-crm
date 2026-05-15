@@ -191,10 +191,19 @@ export default function CustomerDetails() {
   const handleShare = async () => {
     if (!customer) return;
     try {
+      const shareText = `Greencell solar energy solutions - kuttippuram
+-----------------------------------
+Customer details
+
+Name: ${customer.name}
+Phone (Primary): ${customer.phone_primary}${customer.phone_secondary ? `\nPhone (Secondary): ${customer.phone_secondary}` : ''}
+Consumer Number: ${customer.consumer_number || 'N/A'}
+Location: ${customer.location}${customer.google_maps_url ? `\nGoogle Maps: ${customer.google_maps_url}` : ''}
+Status: ${customer.status}${customer.description ? `\nDescription: ${customer.description}` : ''}`;
+
       await navigator.share({
         title: `Lead: ${customer.name}`,
-        text: `Check out this lead: ${customer.name} (${customer.location})`,
-        url: window.location.href
+        text: shareText
       });
     } catch (err) {
       console.log('Sharing failed', err);
