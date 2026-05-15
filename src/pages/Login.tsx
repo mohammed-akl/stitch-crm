@@ -43,7 +43,7 @@ export default function Login() {
             </div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Stitch CRM</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Greencell solar energy solutions CRM</h1>
             <p className="text-sm text-slate-500 mt-1">Manage your business leads efficiently</p>
           </div>
         </header>
