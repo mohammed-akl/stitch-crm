@@ -3,11 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { LeadStatus } from '../types/crm';
-import { motion } from 'motion/react';
-import { ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, ChevronDown, Check, CircleDashed, Activity, Truck, CheckCircle } from 'lucide-react';
+import { cn, getStatusColor } from '../lib/utils';
+
+const STATUSES: LeadStatus[] = ['New', 'In Progress', 'In Transit', 'Closed'];
+
+const getStatusIcon = (status: LeadStatus) => {
+  switch (status) {
+    case 'New': return <CircleDashed size={16} />;
+    case 'In Progress': return <Activity size={16} />;
+    case 'In Transit': return <Truck size={16} />;
+    case 'Closed': return <CheckCircle size={16} />;
+  }
+};
 
 export default function AddLead() {
   const [loading, setLoading] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
@@ -72,7 +85,7 @@ export default function AddLead() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="John Doe"
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
 
@@ -86,7 +99,7 @@ export default function AddLead() {
                   value={formData.phone_primary}
                   onChange={(e) => setFormData({ ...formData, phone_primary: e.target.value })}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
 
@@ -99,24 +112,64 @@ export default function AddLead() {
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="City, Neighborhood"
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <label className="text-sm font-semibold text-gray-700">
                   Initial Status <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                
+                <button
+                  type="button"
+                  onClick={() => setIsStatusOpen(!isStatusOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between rounded-xl border border-gray-200 shadow-sm px-4 py-3 bg-white text-left transition-all",
+                    isStatusOpen ? "ring-2 ring-blue-500 border-blue-500" : "hover:border-gray-300"
+                  )}
                 >
-                  <option value="New">New</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="In Transit">In Transit</option>
-                  <option value="Closed">Closed</option>
-                </select>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("p-1 rounded-md", getStatusColor(formData.status as LeadStatus))}>
+                      {getStatusIcon(formData.status as LeadStatus)}
+                    </span>
+                    <span className="font-medium text-gray-700">{formData.status}</span>
+                  </div>
+                  <ChevronDown size={20} className={cn("text-gray-400 transition-transform", isStatusOpen && "rotate-180")} />
+                </button>
+
+                <AnimatePresence>
+                  {isStatusOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+                    >
+                      {STATUSES.map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, status });
+                            setIsStatusOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={cn("p-1.5 rounded-lg", getStatusColor(status))}>
+                              {getStatusIcon(status)}
+                            </span>
+                            <span className="font-medium text-gray-700">{status}</span>
+                          </div>
+                          {formData.status === status && (
+                            <Check size={18} className="text-blue-600" />
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </section>
 
@@ -131,7 +184,7 @@ export default function AddLead() {
                   value={formData.phone_secondary}
                   onChange={(e) => setFormData({ ...formData, phone_secondary: e.target.value })}
                   placeholder="Optional contact"
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
 
@@ -141,7 +194,7 @@ export default function AddLead() {
                   value={formData.consumer_number}
                   onChange={(e) => setFormData({ ...formData, consumer_number: e.target.value })}
                   placeholder="ID or Account Number"
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
 
@@ -152,7 +205,7 @@ export default function AddLead() {
                   value={formData.google_maps_url}
                   onChange={(e) => setFormData({ ...formData, google_maps_url: e.target.value })}
                   placeholder="https://goo.gl/maps/..."
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
 
@@ -163,7 +216,7 @@ export default function AddLead() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Additional notes about the lead..."
-                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
               </div>
             </section>
