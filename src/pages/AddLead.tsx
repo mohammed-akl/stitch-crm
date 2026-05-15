@@ -30,6 +30,7 @@ export default function AddLead() {
     const { error } = await supabase.from('customers').insert([{
       ...formData,
       created_by: user.id,
+      creator_email: user.email,
     }]);
 
     if (!error) {

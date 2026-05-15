@@ -12,6 +12,7 @@ export interface Customer {
   description?: string;
   google_maps_url?: string;
   created_by: string;
+  creator_email?: string;
 }
 
 export interface Attachment {

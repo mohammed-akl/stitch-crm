@@ -125,6 +125,11 @@ export default function Dashboard() {
                       <p className="text-xs font-medium text-gray-400 mt-0.5 uppercase tracking-wider">
                         ID: {lead.consumer_number || 'N/A'}
                       </p>
+                      {lead.creator_email && (
+                        <p className="text-[10px] text-gray-500 mt-1.5 flex items-center gap-1">
+                          <User size={12} className="text-gray-400" /> {lead.creator_email}
+                        </p>
+                      )}
                     </div>
                     <span className={cn(
                       "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
