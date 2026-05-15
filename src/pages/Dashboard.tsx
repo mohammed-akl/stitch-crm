@@ -54,7 +54,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col flex-1 w-full min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-20 px-4 py-4 space-y-4">
+      <header className="bg-white sticky top-0 z-20 px-4 pt-4 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Leads</h1>
           <button 
@@ -79,16 +79,16 @@ export default function Dashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+        <div className="flex overflow-x-auto no-scrollbar gap-6 border-b border-gray-200 px-2 mt-4">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all",
+                "py-3 text-sm font-bold whitespace-nowrap transition-all border-b-2 -mb-px",
                 activeTab === tab 
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
-                  : "text-gray-500 hover:bg-gray-100"
+                  ? "border-blue-600 text-blue-600" 
+                  : "border-transparent text-slate-500 hover:text-slate-800"
               )}
             >
               {tab}
