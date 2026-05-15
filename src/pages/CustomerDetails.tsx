@@ -238,11 +238,23 @@ Status: ${customer.status}${customer.description ? `\nDescription: ${customer.de
         <button 
           onClick={() => setIsEditing(!isEditing)}
           className={cn(
-            "px-4 py-1.5 rounded-full text-sm font-semibold transition-all",
-            isEditing ? "bg-gray-100 text-gray-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
+            "flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold transition-all active:scale-95",
+            isEditing 
+              ? "border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300" 
+              : "border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:shadow-sm"
           )}
         >
-          {isEditing ? 'Cancel' : 'Edit'}
+          {isEditing ? (
+            <>
+              <X size={16} />
+              <span>Cancel</span>
+            </>
+          ) : (
+            <>
+              <Edit2 size={16} />
+              <span>Edit Lead</span>
+            </>
+          )}
         </button>
       </header>
 
