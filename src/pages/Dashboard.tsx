@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Customer, LeadStatus } from '../types/crm';
 import { cn, getStatusColor } from '../lib/utils';
-import { Search, Phone, Plus, User, MapPin } from 'lucide-react';
+import { Search, Phone, Plus, User, MapPin, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuthStore } from '../store/useAuthStore';
 
 const TABS: (LeadStatus | 'All')[] = ['All', 'New', 'In Progress', 'In Transit', 'Closed'];
 
@@ -14,6 +15,12 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<LeadStatus | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const signOut = useAuthStore((state) => state.signOut);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   useEffect(() => {
     fetchLeads();
@@ -45,8 +52,12 @@ export default function Dashboard() {
       <header className="bg-white border-b sticky top-0 z-20 px-4 py-4 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Leads</h1>
-          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-            <Search size={22} />
+          <button 
+            onClick={handleLogout} 
+            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-all"
+            title="Logout"
+          >
+            <LogOut size={22} />
           </button>
         </div>
 
