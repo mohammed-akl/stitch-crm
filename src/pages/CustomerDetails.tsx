@@ -171,7 +171,7 @@ export default function CustomerDetails() {
   }
 
   return (
-    <div className="flex flex-col flex-1 max-w-lg mx-auto w-full bg-gray-50 min-h-screen">
+    <div className="flex flex-col flex-1 w-full bg-gray-50 min-h-screen">
       {/* Navbar */}
       <header className="bg-white border-b sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -194,8 +194,10 @@ export default function CustomerDetails() {
         </button>
       </header>
 
-      <main className="p-4 space-y-6 flex-grow overflow-y-auto pb-20">
-        <motion.section 
+      <main className="p-4 flex-grow overflow-y-auto pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2 space-y-6">
+            <motion.section 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 space-y-5"
@@ -290,9 +292,11 @@ export default function CustomerDetails() {
             </div>
           </div>
         </motion.section>
+        </div>
 
-        {/* Global Actions */}
-        <div className="grid grid-cols-1 gap-3">
+        <div className="space-y-6">
+          {/* Global Actions */}
+          <div className="grid grid-cols-1 gap-3">
           {customer.google_maps_url && (
             <a 
               href={customer.google_maps_url} 
@@ -393,7 +397,9 @@ export default function CustomerDetails() {
             </button>
           </div>
         </section>
-      </main>
+        </div>
+      </div>
+    </main>
 
       {/* Edit Overlay */}
       <AnimatePresence>

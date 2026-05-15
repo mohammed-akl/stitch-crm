@@ -40,7 +40,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="flex flex-col flex-1 max-w-2xl mx-auto w-full">
+    <div className="flex flex-col flex-1 w-full min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-20 px-4 py-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -94,7 +94,7 @@ export default function Dashboard() {
             <p className="font-medium">No leads found</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">
               {filteredLeads.map((lead) => (
                 <motion.div
