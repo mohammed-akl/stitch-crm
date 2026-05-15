@@ -316,17 +316,17 @@ export default function CustomerDetails() {
                     <div className="flex items-center gap-1">
                       <button 
                         onClick={(e) => handleView(file, e)}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all"
+                        className="p-3 text-blue-600 hover:bg-blue-100 rounded-xl transition-all"
                         title="View File"
                       >
-                        <Eye size={18} />
+                        <Eye size={20} />
                       </button>
                       <button 
                         onClick={() => handleDownload(file)}
-                        className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-all"
+                        className="p-3 text-gray-500 hover:bg-gray-200 rounded-xl transition-all"
                         title="Download File"
                       >
-                        <Download size={18} />
+                        <Download size={20} />
                       </button>
                     </div>
                   </div>
