@@ -1,0 +1,445 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { Customer, Attachment, LeadStatus } from '../types/crm';
+import { cn, getStatusColor } from '../lib/utils';
+import { 
+  ArrowLeft, Edit2, MapPin, Phone, FileText, ExternalLink, 
+  Upload, X, Check, AlertCircle, Share2, Navigation 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+export default function CustomerDetails() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  
+  // Status Update State
+  const [newStatus, setNewStatus] = useState<LeadStatus | ''>('');
+
+  useEffect(() => {
+    if (id) {
+      fetchData();
+    }
+  }, [id]);
+
+  async function fetchData() {
+    setLoading(true);
+    const [cRes, aRes] = await Promise.all([
+      supabase.from('customers').select('*').eq('id', id).single(),
+      supabase.from('attachments').select('*').eq('customer_id', id).order('created_at', { ascending: false })
+    ]);
+
+    if (!cRes.error && cRes.data) {
+      setCustomer(cRes.data);
+      setNewStatus(cRes.data.status);
+    }
+    if (!aRes.error && aRes.data) {
+      setAttachments(aRes.data);
+    }
+    setLoading(false);
+  }
+
+  const handleUpdateStatus = async () => {
+    if (!customer || !newStatus) return;
+    setLoading(true);
+    const { error } = await supabase
+      .from('customers')
+      .update({ status: newStatus as LeadStatus })
+      .eq('id', customer.id);
+
+    if (!error) {
+      setCustomer({ ...customer, status: newStatus as LeadStatus });
+    } else {
+      alert(error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !id) return;
+
+    setUploading(true);
+    setUploadErrors({});
+    
+    const fileArray = Array.from(files) as File[];
+    
+    for (const file of fileArray) {
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadErrors(prev => ({ ...prev, [file.name]: 'File exceeds 5MB limit' }));
+        continue;
+      }
+
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${id}/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('bill-attachments')
+          .upload(filePath, file, {
+            onUploadProgress: (progress: any) => {
+              const percent = (progress.loaded / progress.total) * 100;
+              setUploadProgress(prev => ({ ...prev, [file.name]: percent }));
+            }
+          } as any);
+
+        if (uploadError) throw uploadError;
+
+        // Save metadata to database
+        const { error: dbError } = await supabase.from('attachments').insert({
+          customer_id: id,
+          file_path: filePath,
+          file_name: file.name,
+          file_size: file.size
+        });
+
+        if (dbError) throw dbError;
+
+        // Refresh attachments
+        fetchData();
+      } catch (err: any) {
+        setUploadErrors(prev => ({ ...prev, [file.name]: err.message }));
+      }
+    }
+    
+    setUploading(false);
+    setUploadProgress({});
+  };
+
+  const handleDownload = async (attachment: Attachment) => {
+    const { data, error } = await supabase.storage
+      .from('bill-attachments')
+      .download(attachment.file_path);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = attachment.file_name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async () => {
+    if (!customer) return;
+    try {
+      await navigator.share({
+        title: `Lead: ${customer.name}`,
+        text: `Check out this lead: ${customer.name} (${customer.location})`,
+        url: window.location.href
+      });
+    } catch (err) {
+      console.log('Sharing failed', err);
+    }
+  };
+
+  if (loading && !customer) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!customer) {
+    return <div className="p-10 text-center">Customer not found</div>;
+  }
+
+  return (
+    <div className="flex flex-col flex-1 max-w-lg mx-auto w-full bg-gray-50 min-h-screen">
+      {/* Navbar */}
+      <header className="bg-white border-b sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/')}
+            className="p-2 -ml-2 text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-all flex items-center"
+          >
+            <ArrowLeft size={18} className="mr-1" /> Back
+          </button>
+          <h1 className="text-lg font-bold">Lead Details</h1>
+        </div>
+        <button 
+          onClick={() => setIsEditing(!isEditing)}
+          className={cn(
+            "px-4 py-1.5 rounded-full text-sm font-semibold transition-all",
+            isEditing ? "bg-gray-100 text-gray-600" : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
+          )}
+        >
+          {isEditing ? 'Cancel' : 'Edit'}
+        </button>
+      </header>
+
+      <main className="p-4 space-y-6 flex-grow overflow-y-auto pb-20">
+        <motion.section 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 space-y-5"
+        >
+          {/* Header Info */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
+              {customer.name.substring(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{customer.name}</h2>
+              <span className={cn(
+                "inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                getStatusColor(customer.status)
+              )}>
+                {customer.status}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 pt-2 border-b pb-6">
+            {/* Phone numbers */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Numbers</span>
+              <div className="flex flex-col gap-1">
+                <a href={`tel:${customer.phone_primary}`} className="text-blue-600 font-semibold">{customer.phone_primary} (Primary)</a>
+                {customer.phone_secondary && (
+                  <a href={`tel:${customer.phone_secondary}`} className="text-blue-600 font-semibold">{customer.phone_secondary} (Secondary)</a>
+                )}
+              </div>
+            </div>
+
+            {/* Consumer Number */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Consumer Number</span>
+              <p className="text-gray-900 font-medium">{customer.consumer_number || '#N/A'}</p>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</span>
+              <p className="text-gray-700 text-sm">{customer.location}</p>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Description</span>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                {customer.description || 'No description provided.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Documents */}
+          <div className="pt-2">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Attached Documents</span>
+            <div className="space-y-2">
+              {attachments.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No documents attached.</p>
+              ) : (
+                attachments.map((file) => (
+                  <div 
+                    key={file.id}
+                    onClick={() => handleDownload(file)}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-gray-100 cursor-pointer transition-all active:scale-[0.98]"
+                  >
+                    <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
+                      <FileText size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{file.file_name}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">Added on {new Date(file.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <ExternalLink size={14} className="text-gray-300" />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Global Actions */}
+        <div className="grid grid-cols-1 gap-3">
+          {customer.google_maps_url && (
+            <a 
+              href={customer.google_maps_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-slate-800 active:scale-[0.98] transition-all"
+            >
+              <Navigation size={20} />
+              Navigate to Google Maps
+            </a>
+          )}
+          <button 
+            onClick={handleShare}
+            className="flex items-center justify-center gap-3 bg-white text-gray-800 border-2 border-gray-100 font-bold py-4 rounded-2xl hover:bg-gray-50 active:scale-[0.98] transition-all"
+          >
+            <Share2 size={20} className="text-blue-600" />
+            Share Details
+          </button>
+        </div>
+
+        {/* Closing Lead Module */}
+        <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
+          <h3 className="text-lg font-bold text-gray-900 border-b pb-4">Update Status & Docs</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Select Outcome</label>
+              <select 
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value as LeadStatus)}
+                className="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-sm py-3 font-semibold text-gray-700"
+              >
+                <option value="">-- Choose Status --</option>
+                <option value="New">New</option>
+                <option value="In Progress">In Progress</option>
+                <option value="In Transit">In Transit</option>
+                <option value="Closed">Closed (Won)</option>
+              </select>
+            </div>
+
+            {/* Document Upload Area */}
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Upload Documents</label>
+              <div className="relative">
+                <input 
+                  type="file" 
+                  multiple 
+                  onChange={handleFileUpload}
+                  className="hidden" 
+                  id="file-upload"
+                  disabled={uploading}
+                />
+                <label 
+                  htmlFor="file-upload"
+                  className={cn(
+                    "border-2 border-dashed border-gray-200 rounded-3xl p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 hover:border-blue-300 transition-all cursor-pointer group",
+                    uploading && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <Upload size={32} className="text-gray-400 group-hover:text-blue-500 transition-colors mb-2" />
+                  <p className="text-sm text-gray-700 font-bold">Tap to upload files</p>
+                  <p className="text-[10px] text-gray-400 mt-1 font-medium tracking-wide">PDF, PNG, JPG UP TO 5MB</p>
+                </label>
+              </div>
+
+              {/* Upload Progress/Status */}
+              <div className="mt-4 space-y-2">
+                {(Object.entries(uploadProgress) as [string, number][]).map(([name, progress]) => (
+                  <div key={name} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold text-gray-700 truncate mr-2">{name}</span>
+                      <span className="text-[10px] font-bold text-blue-600">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        className="h-full bg-blue-600"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {Object.entries(uploadErrors).map(([name, error]) => (
+                  <div key={name} className="bg-red-50 p-3 rounded-xl border border-red-100 flex items-center gap-2 text-red-600">
+                    <AlertCircle size={14} />
+                    <span className="text-xs font-bold truncate">{name}: {error}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button 
+              onClick={handleUpdateStatus}
+              disabled={loading || !newStatus}
+              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold mt-4 hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
+            >
+              {loading ? 'Updating...' : 'Update Lead Status'}
+            </button>
+          </div>
+        </section>
+      </main>
+
+      {/* Edit Overlay */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div 
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            className="fixed inset-0 z-50 bg-white flex flex-col pt-safe"
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold">Edit Lead Info</h2>
+              <button onClick={() => setIsEditing(false)} className="p-2 bg-gray-100 rounded-full">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-grow p-4 overflow-y-auto space-y-6">
+              {/* Form implementation for editing - reusing logic from AddLead potentially or just simple inputs */}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Name</label>
+                  <input 
+                    defaultValue={customer.name} 
+                    onChange={(e) => setCustomer({...customer, name: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Primary</label>
+                  <input 
+                    defaultValue={customer.phone_primary} 
+                    onChange={(e) => setCustomer({...customer, phone_primary: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</label>
+                  <textarea 
+                    defaultValue={customer.location} 
+                    onBlur={(e) => setCustomer({...customer, location: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Description</label>
+                  <textarea 
+                    defaultValue={customer.description} 
+                    onBlur={(e) => setCustomer({...customer, description: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t bg-white">
+              <button 
+                onClick={async () => {
+                  setLoading(true);
+                  const { error } = await supabase.from('customers').update(customer).eq('id', customer.id);
+                  if (!error) setIsEditing(false);
+                  setLoading(false);
+                }}
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-100"
+              >
+                Save Changes
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

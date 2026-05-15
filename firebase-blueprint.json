@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "customer": {
+      "title": "Customer",
+      "description": "A lead or customer in the CRM",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["New", "In Progress", "In Transit", "Closed"] },
+        "phone_primary": { "type": "string" },
+        "phone_secondary": { "type": "string" },
+        "consumer_number": { "type": "string" },
+        "location": { "type": "string" },
+        "description": { "type": "string" },
+        "google_maps_url": { "type": "string" },
+        "created_by": { "type": "string", "format": "uuid" }
+      },
+      "required": ["name", "status"]
+    },
+    "attachment": {
+      "title": "Attachment",
+      "description": "A file attached to a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "customer_id": { "type": "string", "format": "uuid" },
+        "file_path": { "type": "string" },
+        "file_name": { "type": "string" },
+        "file_size": { "type": "number" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customer_id", "file_path", "file_name"]
+    }
+  },
+  "firestore": {
+    "customers": {
+      "schema": "customer",
+      "description": "Main customers collection"
+    },
+    "attachments": {
+      "schema": "attachment",
+      "description": "Files associated with customers"
+    }
+  }
+}
