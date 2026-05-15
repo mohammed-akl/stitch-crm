@@ -24,6 +24,8 @@ export default function CustomerDetails() {
   
   // Status Update State
   const [newStatus, setNewStatus] = useState<LeadStatus | ''>('');
+  const [failedReason, setFailedReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -41,6 +43,15 @@ export default function CustomerDetails() {
     if (!cRes.error && cRes.data) {
       setCustomer(cRes.data);
       setNewStatus(cRes.data.status);
+      if (cRes.data.status === 'Failed' && cRes.data.failed_reason) {
+        const REASONS = ['Price too high', 'Went with competitor', 'Unresponsive', 'Not a good fit'];
+        if (REASONS.includes(cRes.data.failed_reason)) {
+          setFailedReason(cRes.data.failed_reason);
+        } else {
+          setFailedReason('Other');
+          setOtherReason(cRes.data.failed_reason);
+        }
+      }
     }
     if (!aRes.error && aRes.data) {
       setAttachments(aRes.data);
@@ -50,14 +61,30 @@ export default function CustomerDetails() {
 
   const handleUpdateStatus = async () => {
     if (!customer || !newStatus) return;
+    if (newStatus === 'Failed' && !failedReason) {
+      alert('Please select a reason for losing the lead.');
+      return;
+    }
+    if (newStatus === 'Failed' && failedReason === 'Other' && !otherReason) {
+      alert('Please specify the reason.');
+      return;
+    }
+    
     setLoading(true);
+    const updateData: Partial<Customer> = { status: newStatus as LeadStatus };
+    if (newStatus === 'Failed') {
+      updateData.failed_reason = failedReason === 'Other' ? otherReason : failedReason;
+    } else {
+      updateData.failed_reason = null; // Clear if not Failed
+    }
+
     const { error } = await supabase
       .from('customers')
-      .update({ status: newStatus as LeadStatus })
+      .update(updateData)
       .eq('id', customer.id);
 
     if (!error) {
-      setCustomer({ ...customer, status: newStatus as LeadStatus });
+      setCustomer({ ...customer, ...updateData } as Customer);
     } else {
       alert(error.message);
     }
@@ -334,8 +361,42 @@ export default function CustomerDetails() {
                 <option value="In Progress">In Progress</option>
                 <option value="In Transit">In Transit</option>
                 <option value="Closed">Closed (Won)</option>
+                <option value="Failed">Failed (Lose)</option>
               </select>
             </div>
+
+            {newStatus === 'Failed' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 pt-2">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Reason for Losing</label>
+                  <select 
+                    value={failedReason}
+                    onChange={(e) => setFailedReason(e.target.value)}
+                    className="w-full rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500 text-sm py-3 font-semibold text-gray-700"
+                  >
+                    <option value="">-- Select Reason --</option>
+                    <option value="Price too high">Price too high</option>
+                    <option value="Went with competitor">Went with competitor</option>
+                    <option value="Unresponsive">Unresponsive</option>
+                    <option value="Not a good fit">Not a good fit</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                
+                {failedReason === 'Other' && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Specify Reason</label>
+                    <textarea 
+                      value={otherReason}
+                      onChange={(e) => setOtherReason(e.target.value)}
+                      placeholder="Please provide details..."
+                      rows={3}
+                      className="w-full rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500 text-sm px-4 py-3 font-medium text-gray-700"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Document Upload Area */}
             <div>

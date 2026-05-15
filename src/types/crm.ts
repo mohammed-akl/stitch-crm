@@ -1,4 +1,4 @@
-export type LeadStatus = 'New' | 'In Progress' | 'In Transit' | 'Closed';
+export type LeadStatus = 'New' | 'In Progress' | 'In Transit' | 'Closed' | 'Failed';
 
 export interface Customer {
   id: string;
@@ -11,6 +11,7 @@ export interface Customer {
   location: string;
   description?: string;
   google_maps_url?: string;
+  failed_reason?: string;
   created_by: string;
   creator_email?: string;
 }

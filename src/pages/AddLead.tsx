@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { LeadStatus } from '../types/crm';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ChevronDown, Check, CircleDashed, Activity, Truck, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, CircleDashed, Activity, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { cn, getStatusColor } from '../lib/utils';
 
-const STATUSES: LeadStatus[] = ['New', 'In Progress', 'In Transit', 'Closed'];
+const STATUSES: LeadStatus[] = ['New', 'In Progress', 'In Transit', 'Closed', 'Failed'];
 
 const getStatusIcon = (status: LeadStatus) => {
   switch (status) {
@@ -15,6 +15,7 @@ const getStatusIcon = (status: LeadStatus) => {
     case 'In Progress': return <Activity size={16} />;
     case 'In Transit': return <Truck size={16} />;
     case 'Closed': return <CheckCircle size={16} />;
+    case 'Failed': return <XCircle size={16} />;
   }
 };
 

@@ -7,7 +7,7 @@ import { Search, Phone, Plus, User, MapPin, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../store/useAuthStore';
 
-const TABS: (LeadStatus | 'All')[] = ['All', 'New', 'In Progress', 'In Transit', 'Closed'];
+const TABS: (LeadStatus | 'All')[] = ['All', 'New', 'In Progress', 'In Transit', 'Closed', 'Failed'];
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Customer[]>([]);
