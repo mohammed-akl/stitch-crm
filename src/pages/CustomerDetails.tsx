@@ -5,11 +5,25 @@ import { Customer, Attachment, LeadStatus } from '../types/crm';
 import { cn, getStatusColor } from '../lib/utils';
 import { 
   ArrowLeft, Edit2, MapPin, Phone, FileText, ExternalLink, 
-  Upload, X, Check, AlertCircle, Share2, Navigation, Eye, Download 
+  Upload, X, Check, AlertCircle, Share2, Navigation, Eye, Download,
+  ChevronDown, CircleDashed, Activity, Truck, CheckCircle, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+const STATUSES: LeadStatus[] = ['New', 'In Progress', 'In Transit', 'Closed', 'Failed'];
+const FAILED_REASONS = ['Price too high', 'Went with competitor', 'Unresponsive', 'Not a good fit', 'Other'];
+
+const getStatusIcon = (status: LeadStatus) => {
+  switch (status) {
+    case 'New': return <CircleDashed size={16} />;
+    case 'In Progress': return <Activity size={16} />;
+    case 'In Transit': return <Truck size={16} />;
+    case 'Closed': return <CheckCircle size={16} />;
+    case 'Failed': return <XCircle size={16} />;
+  }
+};
 
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +37,8 @@ export default function CustomerDetails() {
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   
   // Status Update State
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isReasonOpen, setIsReasonOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<LeadStatus | ''>('');
   const [failedReason, setFailedReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
@@ -349,38 +365,114 @@ export default function CustomerDetails() {
           <h3 className="text-lg font-bold text-gray-900 border-b pb-4">Update Status & Docs</h3>
           
           <div className="space-y-4">
-            <div>
+            <div className="relative z-10">
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Select Outcome</label>
-              <select 
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value as LeadStatus)}
-                className="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-sm py-3 font-semibold text-gray-700"
+              
+              <button
+                type="button"
+                onClick={() => setIsStatusOpen(!isStatusOpen)}
+                className={cn(
+                  "w-full flex items-center justify-between rounded-xl border border-gray-200 shadow-sm px-4 py-3 bg-white text-left transition-all",
+                  isStatusOpen ? "ring-2 ring-blue-500 border-blue-500" : "hover:border-gray-300"
+                )}
               >
-                <option value="">-- Choose Status --</option>
-                <option value="New">New</option>
-                <option value="In Progress">In Progress</option>
-                <option value="In Transit">In Transit</option>
-                <option value="Closed">Closed (Won)</option>
-                <option value="Failed">Failed (Lose)</option>
-              </select>
+                <div className="flex items-center gap-2">
+                  {newStatus ? (
+                    <>
+                      <span className={cn("p-1 rounded-md", getStatusColor(newStatus as LeadStatus))}>
+                        {getStatusIcon(newStatus as LeadStatus)}
+                      </span>
+                      <span className="font-medium text-gray-700">{newStatus}</span>
+                    </>
+                  ) : (
+                    <span className="font-medium text-gray-400">-- Choose Status --</span>
+                  )}
+                </div>
+                <ChevronDown size={20} className={cn("text-gray-400 transition-transform", isStatusOpen && "rotate-180")} />
+              </button>
+
+              <AnimatePresence>
+                {isStatusOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+                  >
+                    {STATUSES.map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => {
+                          setNewStatus(status);
+                          setIsStatusOpen(false);
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={cn("p-1.5 rounded-lg", getStatusColor(status))}>
+                            {getStatusIcon(status)}
+                          </span>
+                          <span className="font-medium text-gray-700">{status}</span>
+                        </div>
+                        {newStatus === status && (
+                          <Check size={18} className="text-blue-600" />
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {newStatus === 'Failed' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-2 pt-2">
-                <div>
+                <div className="relative z-[9]">
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Reason for Losing</label>
-                  <select 
-                    value={failedReason}
-                    onChange={(e) => setFailedReason(e.target.value)}
-                    className="w-full rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500 text-sm py-3 font-semibold text-gray-700"
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsReasonOpen(!isReasonOpen)}
+                    className={cn(
+                      "w-full flex items-center justify-between rounded-xl border border-gray-200 shadow-sm px-4 py-3 bg-white text-left transition-all",
+                      isReasonOpen ? "ring-2 ring-red-500 border-red-500" : "hover:border-gray-300"
+                    )}
                   >
-                    <option value="">-- Select Reason --</option>
-                    <option value="Price too high">Price too high</option>
-                    <option value="Went with competitor">Went with competitor</option>
-                    <option value="Unresponsive">Unresponsive</option>
-                    <option value="Not a good fit">Not a good fit</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    <span className={cn("font-medium", failedReason ? "text-gray-700" : "text-gray-400")}>
+                      {failedReason || "-- Select Reason --"}
+                    </span>
+                    <ChevronDown size={20} className={cn("text-gray-400 transition-transform", isReasonOpen && "rotate-180")} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isReasonOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+                      >
+                        {FAILED_REASONS.map((reason) => (
+                          <button
+                            key={reason}
+                            type="button"
+                            onClick={() => {
+                              setFailedReason(reason);
+                              setIsReasonOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-red-50 transition-colors text-left"
+                          >
+                            <span className={cn("font-medium", failedReason === reason ? "text-red-700" : "text-gray-700")}>
+                              {reason}
+                            </span>
+                            {failedReason === reason && (
+                              <Check size={18} className="text-red-600" />
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 
                 {failedReason === 'Other' && (
