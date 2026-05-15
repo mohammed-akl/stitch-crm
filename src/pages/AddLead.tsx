@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { LeadStatus } from '../types/crm';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ChevronDown, Check, CircleDashed, Activity, Truck, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, CircleDashed, Activity, Truck, CheckCircle, XCircle, Zap } from 'lucide-react';
 import { cn, getStatusColor } from '../lib/utils';
 
 const STATUSES: LeadStatus[] = ['New', 'In Progress', 'In Transit', 'Closed', 'Failed'];
@@ -22,6 +22,7 @@ const getStatusIcon = (status: LeadStatus) => {
 export default function AddLead() {
   const [loading, setLoading] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isKwOpen, setIsKwOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
@@ -33,6 +34,8 @@ export default function AddLead() {
     consumer_number: '',
     google_maps_url: '',
     description: '',
+    pincode: '',
+    kilo_watt: '',
     status: 'New' as LeadStatus,
   });
 
@@ -115,6 +118,74 @@ export default function AddLead() {
                   placeholder="City, Neighborhood"
                   className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700">
+                  Pincode
+                </label>
+                <input
+                  value={formData.pincode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setFormData({ ...formData, pincode: val });
+                  }}
+                  placeholder="6 digit pincode"
+                  className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
+                />
+              </div>
+
+              <div className="space-y-1.5 relative">
+                <label className="text-sm font-semibold text-gray-700">
+                  Kilo Watt (KW) Preference
+                </label>
+                
+                <button
+                  type="button"
+                  onClick={() => setIsKwOpen(!isKwOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between rounded-xl border border-gray-200 shadow-sm px-4 py-3 bg-white text-left transition-all",
+                    isKwOpen ? "ring-2 ring-yellow-500 border-yellow-500" : "hover:border-gray-300"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-yellow-100 text-yellow-600">
+                      <Zap size={16} fill="currentColor" />
+                    </span>
+                    <span className="font-medium text-gray-700">
+                      {formData.kilo_watt || 'Select KW'}
+                    </span>
+                  </div>
+                  <ChevronDown size={20} className={cn("text-gray-400 transition-transform", isKwOpen && "rotate-180")} />
+                </button>
+
+                <AnimatePresence>
+                  {isKwOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-60 overflow-y-auto"
+                    >
+                      {Array.from({ length: 20 }, (_, i) => `${i + 1}KW`).map((kw) => (
+                        <button
+                          key={kw}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, kilo_watt: kw });
+                            setIsKwOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-yellow-50 transition-colors border-b border-gray-50 last:border-0"
+                        >
+                          <span className="font-semibold text-gray-700">{kw}</span>
+                          {formData.kilo_watt === kw && (
+                            <Check size={16} className="text-yellow-600" />
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="space-y-1.5 relative">

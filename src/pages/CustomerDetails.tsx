@@ -6,7 +6,7 @@ import { cn, getStatusColor } from '../lib/utils';
 import { 
   ArrowLeft, Edit2, MapPin, Phone, FileText, ExternalLink, 
   Upload, X, Check, AlertCircle, Share2, Navigation, Eye, Download,
-  ChevronDown, CircleDashed, Activity, Truck, CheckCircle, XCircle, Copy
+  ChevronDown, CircleDashed, Activity, Truck, CheckCircle, XCircle, Copy, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -42,6 +42,7 @@ export default function CustomerDetails() {
   const [newStatus, setNewStatus] = useState<LeadStatus | ''>('');
   const [failedReason, setFailedReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
+  const [isKwOpen, setIsKwOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -198,8 +199,8 @@ Customer details
 Name: ${customer.name}
 Phone (Primary): ${customer.phone_primary}${customer.phone_secondary ? `\nPhone (Secondary): ${customer.phone_secondary}` : ''}
 Consumer Number: ${customer.consumer_number || 'N/A'}
-Location: ${customer.location}${customer.google_maps_url ? `\nGoogle Maps: ${customer.google_maps_url}` : ''}
-Status: ${customer.status}${customer.description ? `\nDescription: ${customer.description}` : ''}`;
+Location: ${customer.location}${customer.pincode ? `\nPincode: ${customer.pincode}` : ''}${customer.google_maps_url ? `\nGoogle Maps: ${customer.google_maps_url}` : ''}
+Status: ${customer.status}${customer.kilo_watt ? `\nKW Preference: ${customer.kilo_watt}` : ''}${customer.description ? `\nDescription: ${customer.description}` : ''}`;
   };
 
   const handleShare = async () => {
@@ -288,12 +289,20 @@ Status: ${customer.status}${customer.description ? `\nDescription: ${customer.de
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{customer.name}</h2>
-              <span className={cn(
-                "inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                getStatusColor(customer.status)
-              )}>
-                {customer.status}
-              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn(
+                  "inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                  getStatusColor(customer.status)
+                )}>
+                  {customer.status}
+                </span>
+                {customer.kilo_watt && (
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-[10px] font-bold tracking-widest shadow-sm border border-yellow-200">
+                    <Zap size={10} className="text-yellow-500" fill="currentColor" />
+                    {customer.kilo_watt}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -320,6 +329,14 @@ Status: ${customer.status}${customer.description ? `\nDescription: ${customer.de
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</span>
               <p className="text-gray-700 text-sm">{customer.location}</p>
             </div>
+
+            {/* Pincode */}
+            {customer.pincode && (
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pincode</span>
+                <p className="text-gray-900 font-medium">{customer.pincode}</p>
+              </div>
+            )}
 
             {/* Description */}
             <div className="space-y-1">
@@ -667,6 +684,69 @@ Status: ${customer.status}${customer.description ? `\nDescription: ${customer.de
                     className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
                     rows={2}
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Pincode</label>
+                  <input 
+                    defaultValue={customer.pincode || ''} 
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setCustomer({...customer, pincode: val});
+                      e.target.value = val;
+                    }}
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3"
+                    placeholder="6 digit pincode"
+                  />
+                </div>
+                <div className="space-y-1.5 relative">
+                  <label className="text-sm font-semibold text-gray-700">Kilo Watt (KW) Preference</label>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsKwOpen(!isKwOpen)}
+                    className={cn(
+                      "w-full flex items-center justify-between rounded-xl border border-gray-200 shadow-sm px-4 py-3 bg-white text-left transition-all",
+                      isKwOpen ? "ring-2 ring-yellow-500 border-yellow-500" : "hover:border-gray-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 rounded-md bg-yellow-100 text-yellow-600">
+                        <Zap size={16} fill="currentColor" />
+                      </span>
+                      <span className="font-medium text-gray-700">
+                        {customer.kilo_watt || 'Select KW'}
+                      </span>
+                    </div>
+                    <ChevronDown size={20} className={cn("text-gray-400 transition-transform", isKwOpen && "rotate-180")} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isKwOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-60 overflow-y-auto"
+                      >
+                        {Array.from({ length: 20 }, (_, i) => `${i + 1}KW`).map((kw) => (
+                          <button
+                            key={kw}
+                            type="button"
+                            onClick={() => {
+                              setCustomer({ ...customer, kilo_watt: kw });
+                              setIsKwOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-yellow-50 transition-colors border-b border-gray-50 last:border-0"
+                          >
+                            <span className="font-semibold text-gray-700">{kw}</span>
+                            {customer.kilo_watt === kw && (
+                              <Check size={16} className="text-yellow-600" />
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Google Maps URL</label>

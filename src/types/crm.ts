@@ -9,6 +9,8 @@ export interface Customer {
   phone_secondary?: string;
   consumer_number?: string;
   location: string;
+  pincode?: string;
+  kilo_watt?: string;
   description?: string;
   google_maps_url?: string;
   failed_reason?: string;

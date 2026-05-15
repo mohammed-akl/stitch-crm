@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Customer, LeadStatus } from '../types/crm';
 import { cn, getStatusColor } from '../lib/utils';
-import { Search, Phone, Plus, User, MapPin, LogOut } from 'lucide-react';
+import { Search, Phone, Plus, User, MapPin, LogOut, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -136,12 +136,20 @@ export default function Dashboard() {
                         </p>
                       )}
                     </div>
-                    <span className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
-                      getStatusColor(lead.status)
-                    )}>
-                      {lead.status}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                        getStatusColor(lead.status)
+                      )}>
+                        {lead.status}
+                      </span>
+                      {lead.kilo_watt && (
+                        <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-[10px] font-bold tracking-widest shadow-sm border border-yellow-200">
+                          <Zap size={12} className="text-yellow-500" fill="currentColor" />
+                          {lead.kilo_watt}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 text-gray-500 text-sm mb-5">
