@@ -158,22 +158,7 @@ export default function Dashboard() {
         <Plus size={28} />
       </button>
 
-      {/* Footer Navigation (Mock) */}
-      <nav className="bg-white border-t flex justify-around py-3">
-        <button className="flex flex-col items-center gap-1 text-blue-600">
-          <div className="h-1 w-6 bg-blue-600 rounded-full mb-1" />
-          <Search size={22} />
-          <span className="text-[10px] font-bold uppercase">Dashboard</span>
-        </button>
-        <button className="flex flex-col items-center gap-1 text-gray-400">
-          <User size={22} />
-          <span className="text-[10px] font-bold uppercase">Customers</span>
-        </button>
-        <button className="flex flex-col items-center gap-1 text-gray-400">
-          <Plus size={22} />
-          <span className="text-[10px] font-bold uppercase">Settings</span>
-        </button>
-      </nav>
+
     </div>
   );
 }
