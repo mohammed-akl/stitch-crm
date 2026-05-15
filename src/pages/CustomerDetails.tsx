@@ -5,7 +5,7 @@ import { Customer, Attachment, LeadStatus } from '../types/crm';
 import { cn, getStatusColor } from '../lib/utils';
 import { 
   ArrowLeft, Edit2, MapPin, Phone, FileText, ExternalLink, 
-  Upload, X, Check, AlertCircle, Share2, Navigation 
+  Upload, X, Check, AlertCircle, Share2, Navigation, Eye, Download 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -134,6 +134,17 @@ export default function CustomerDetails() {
     URL.revokeObjectURL(url);
   };
 
+  const handleView = (attachment: Attachment, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const { data } = supabase.storage
+      .from('bill-attachments')
+      .getPublicUrl(attachment.file_path);
+    
+    if (data?.publicUrl) {
+      window.open(data.publicUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const handleShare = async () => {
     if (!customer) return;
     try {
@@ -248,8 +259,7 @@ export default function CustomerDetails() {
                 attachments.map((file) => (
                   <div 
                     key={file.id}
-                    onClick={() => handleDownload(file)}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-gray-100 cursor-pointer transition-all active:scale-[0.98]"
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 transition-all"
                   >
                     <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
                       <FileText size={20} />
@@ -258,7 +268,22 @@ export default function CustomerDetails() {
                       <p className="text-sm font-bold text-gray-900 truncate">{file.file_name}</p>
                       <p className="text-[10px] text-gray-400 font-medium">Added on {new Date(file.created_at).toLocaleDateString()}</p>
                     </div>
-                    <ExternalLink size={14} className="text-gray-300" />
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={(e) => handleView(file, e)}
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all"
+                        title="View File"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDownload(file)}
+                        className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-all"
+                        title="Download File"
+                      >
+                        <Download size={18} />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -405,6 +430,24 @@ export default function CustomerDetails() {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Secondary</label>
+                  <input 
+                    defaultValue={customer.phone_secondary || ''} 
+                    onChange={(e) => setCustomer({...customer, phone_secondary: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Consumer Number</label>
+                  <input 
+                    defaultValue={customer.consumer_number || ''} 
+                    onChange={(e) => setCustomer({...customer, consumer_number: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    placeholder="ID or Account Number"
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</label>
                   <textarea 
                     defaultValue={customer.location} 
@@ -414,9 +457,19 @@ export default function CustomerDetails() {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Google Maps URL</label>
+                  <input 
+                    type="url"
+                    defaultValue={customer.google_maps_url || ''} 
+                    onChange={(e) => setCustomer({...customer, google_maps_url: e.target.value})}
+                    className="w-full rounded-xl border-gray-200 p-3 font-semibold"
+                    placeholder="https://goo.gl/maps/..."
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Description</label>
                   <textarea 
-                    defaultValue={customer.description} 
+                    defaultValue={customer.description || ''} 
                     onBlur={(e) => setCustomer({...customer, description: e.target.value})}
                     className="w-full rounded-xl border-gray-200 p-3 font-semibold"
                     rows={4}
